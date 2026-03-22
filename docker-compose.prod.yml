@@ -1,0 +1,12 @@
+services:
+  postgres:
+    ports: !reset []
+    restart: unless-stopped
+
+  app:
+    restart: unless-stopped
+
+  nginx:
+    ports:
+      - "80:80"
+    restart: unless-stopped
