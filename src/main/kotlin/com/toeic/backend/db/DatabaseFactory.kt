@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory
 object DatabaseFactory {
 
     private val logger = LoggerFactory.getLogger(DatabaseFactory::class.java)
+    lateinit var database: Database
 
     fun init() {
         val host = System.getenv("POSTGRES_HOST") ?: "localhost"
@@ -38,9 +39,9 @@ object DatabaseFactory {
             validate()
         }
 
-        Database.connect(HikariDataSource(hikariConfig))
+        database = Database.connect(HikariDataSource(hikariConfig))
 
-        transaction {
+        transaction(database) {
             SchemaUtils.create(UsersTable, ClassesTable, EnrollmentsTable)
             seedDevData()
         }
@@ -85,4 +86,4 @@ object DatabaseFactory {
 }
 
 suspend fun <T> dbQuery(block: () -> T): T =
-    newSuspendedTransaction(Dispatchers.IO) { block() }
+    newSuspendedTransaction(Dispatchers.IO, DatabaseFactory.database) { block() }

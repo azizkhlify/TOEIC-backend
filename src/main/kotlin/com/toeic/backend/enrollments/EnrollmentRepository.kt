@@ -8,6 +8,7 @@ import com.toeic.backend.db.dbQuery
 import com.toeic.backend.users.UsersTable
 import kotlinx.datetime.Clock
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.JoinType
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import java.util.*
 
@@ -55,12 +56,11 @@ class EnrollmentRepository {
     }
 
     suspend fun findClassesByStudentId(studentId: String): List<StudentClassItem> = dbQuery {
-        (EnrollmentsTable innerJoin ClassesTable innerJoin UsersTable)
+        EnrollmentsTable
+            .innerJoin(ClassesTable)
+            .join(UsersTable, JoinType.INNER, ClassesTable.teacherId, UsersTable.id)
             .selectAll()
-            .where {
-                (EnrollmentsTable.studentId eq studentId) and
-                    (ClassesTable.teacherId eq UsersTable.id)
-            }
+            .where { EnrollmentsTable.studentId eq studentId }
             .map {
                 StudentClassItem(
                     id = it[ClassesTable.id],
