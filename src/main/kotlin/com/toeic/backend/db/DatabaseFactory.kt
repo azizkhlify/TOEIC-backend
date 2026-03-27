@@ -1,24 +1,31 @@
 package com.toeic.backend.db
 
+import at.favre.lib.crypto.bcrypt.BCrypt
 import com.toeic.backend.classes.ClassesTable
 import com.toeic.backend.enrollments.EnrollmentsTable
 import com.toeic.backend.users.UsersTable
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
-import io.ktor.server.application.*
 import kotlinx.coroutines.Dispatchers
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
+import org.jetbrains.exposed.sql.insert
+import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.transactions.transaction
+import org.slf4j.LoggerFactory
 
 object DatabaseFactory {
 
-    fun init(environment: ApplicationEnvironment) {
-        val config = environment.config
-        val url = config.property("database.url").getString()
-        val user = config.property("database.user").getString()
-        val password = config.property("database.password").getString()
+    private val logger = LoggerFactory.getLogger(DatabaseFactory::class.java)
+
+    fun init() {
+        val host = System.getenv("POSTGRES_HOST") ?: "localhost"
+        val port = System.getenv("POSTGRES_PORT") ?: "5432"
+        val db = System.getenv("POSTGRES_DB") ?: "toeic_backend"
+        val url = "jdbc:postgresql://$host:$port/$db"
+        val user = System.getenv("POSTGRES_USER") ?: "thee"
+        val password = System.getenv("POSTGRES_PASSWORD") ?: ""
 
         val hikariConfig = HikariConfig().apply {
             jdbcUrl = url
@@ -35,7 +42,45 @@ object DatabaseFactory {
 
         transaction {
             SchemaUtils.create(UsersTable, ClassesTable, EnrollmentsTable)
+            seedDevData()
         }
+    }
+
+    private fun seedDevData() {
+        val hasUsers = UsersTable.selectAll().count() > 0
+        if (hasUsers) return
+
+        logger.info("Seeding dev data...")
+
+        val hash = { pwd: String ->
+            BCrypt.withDefaults().hashToString(12, pwd.toCharArray())
+        }
+
+        UsersTable.insert {
+            it[id] = "teacher-01"
+            it[fullName] = "Mondher Ben Ali"
+            it[email] = "mondher@thee.tn"
+            it[passwordHash] = hash("password123")
+            it[role] = "teacher"
+        }
+
+        UsersTable.insert {
+            it[id] = "student-01"
+            it[fullName] = "Yassine Kaibi"
+            it[email] = "yassine@thee.tn"
+            it[passwordHash] = hash("password123")
+            it[role] = "student"
+        }
+
+        UsersTable.insert {
+            it[id] = "student-02"
+            it[fullName] = "Amira Trabelsi"
+            it[email] = "amira@thee.tn"
+            it[passwordHash] = hash("password123")
+            it[role] = "student"
+        }
+
+        logger.info("Seeded 3 dev users (password: password123)")
     }
 }
 

@@ -20,10 +20,10 @@ fun Application.module() {
     configureStatusPages()
     configureCallLogging()
 
-    val jwtService = JwtService(environment)
+    val jwtService = JwtService()
     configureAuthentication(jwtService)
 
-    DatabaseFactory.init(environment)
+    DatabaseFactory.init()
 
     val userRepository = UserRepository()
     val classRepository = ClassRepository()
