@@ -9,6 +9,8 @@ RUN gradle installDist --no-daemon
 
 FROM eclipse-temurin:21-jre-alpine AS runtime
 
+RUN apk add --no-cache wget
+
 WORKDIR /app
 COPY --from=build /app/build/install/toeic-backend ./
 

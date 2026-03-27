@@ -5,14 +5,3 @@ ktor:
   deployment:
     port: 8080
 
-jwt:
-  secret: ${JWT_SECRET}
-  issuer: ${JWT_ISSUER}
-  audience: ${JWT_AUDIENCE}
-  realm: "toeic-backend"
-  expiration: ${JWT_EXPIRATION}
-
-database:
-  url: "jdbc:postgresql://${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}"
-  user: ${POSTGRES_USER}
-  password: ${POSTGRES_PASSWORD}
